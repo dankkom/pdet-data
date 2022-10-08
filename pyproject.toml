@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "pdet-fetcher"
-version = "0.0.1"
-description = ""
+version = "0.1.0"
+description = "pdet-fetcher: Coletor de dados brutos do PDET"
 authors = ["Daniel Komesu <danielkomesu@gmail.com>"]
 
 [tool.poetry.dependencies]
