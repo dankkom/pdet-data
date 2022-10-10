@@ -12,8 +12,10 @@ def main():
 
     dest_dir = args.output
     ftp = fetcher.connect()
-    fetcher.fetch_rais(ftp=ftp, dest_dir=dest_dir / "rais")
-    fetcher.fetch_caged(ftp=ftp, dest_dir=dest_dir / "caged")
+    for file in fetcher.fetch_rais(ftp=ftp, dest_dir=dest_dir):
+        pass
+    for file in fetcher.fetch_caged(ftp=ftp, dest_dir=dest_dir):
+        pass
     ftp.close()
 
 

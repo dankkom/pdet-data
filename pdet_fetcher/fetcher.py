@@ -4,7 +4,7 @@ import logging
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable
+from typing import Generator
 
 from tqdm import tqdm
 
@@ -69,12 +69,7 @@ def list_files(ftp: ftplib.FTP, directory: str) -> list[dict]:
     return files
 
 
-def fetch_file(
-    ftp: ftplib.FTP,
-    ftp_filepath: str,
-    dest_filepath: Path,
-    **kwargs,
-) -> None:
+def fetch_file(ftp: ftplib.FTP, ftp_filepath: str, dest_filepath: Path, **kwargs):
     """Download a file from FTP."""
     dest_filepath.parent.mkdir(parents=True, exist_ok=True)
 
@@ -116,7 +111,7 @@ def get_years(fi: list[dict]) -> list[int]:
 # -----------------------------------------------------------------------------
 # ---------------------------------- CAGED ------------------------------------
 # -----------------------------------------------------------------------------
-def list_caged_files(ftp: ftplib.FTP):
+def list_caged_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     dataset = "caged"
     years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
     for year in years:
@@ -128,10 +123,14 @@ def list_caged_files(ftp: ftplib.FTP):
             )
             if m:
                 month, year = m.groups()
-                yield file | {"year": int(year), "month": int(month), "dataset": dataset}
+                yield file | {
+                    "year": int(year),
+                    "month": int(month),
+                    "dataset": dataset,
+                }
 
 
-def list_caged_ajustes_files(ftp: ftplib.FTP):
+def list_caged_ajustes_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     dataset = "caged-ajustes-2002a2009"
     files = list_files(ftp, directory=datasets[dataset]["path"])
     for file in files:
@@ -154,15 +153,20 @@ def list_caged_ajustes_files(ftp: ftplib.FTP):
             )
             if m:
                 month, year = m.groups()
-                yield file | {"year": int(year), "month": int(month), "dataset": dataset}
+                yield file | {
+                    "year": int(year),
+                    "month": int(month),
+                    "dataset": dataset,
+                }
 
 
-def list_caged(ftp: ftplib.FTP):
+def list_caged(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     yield from list_caged_files(ftp)
     yield from list_caged_ajustes_files(ftp)
 
 
-def fetch_caged(ftp: ftplib.FTP, dest_dir: Path, callback: Callable[[dict], Any] = None):
+
+def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> Generator[dict, None, None]:
     for file in list_caged(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_filepath(file, dest_dir)
@@ -170,14 +174,13 @@ def fetch_caged(ftp: ftplib.FTP, dest_dir: Path, callback: Callable[[dict], Any]
             continue
         file_size = file["size"]
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
-        if callable(callback):
-            callback(file | {"dest_filepath": dest_filepath})
+        yield file | {"filepath": dest_filepath}
 
 
 # -----------------------------------------------------------------------------
 # ----------------------------------- RAIS ------------------------------------
 # -----------------------------------------------------------------------------
-def list_rais_files(ftp: ftplib.FTP):
+def list_rais_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     dataset = "rais-1985-2017"
     years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
     for year in years:
@@ -189,7 +192,11 @@ def list_rais_files(ftp: ftplib.FTP):
             )
             if m:
                 uf, year = m.groups()
-                yield file | {"year": int(year), "uf": uf, "dataset": dataset}
+                yield file | {
+                    "year": int(year),
+                    "uf": uf,
+                    "dataset": dataset,
+                }
     dataset = "rais"
     years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
     for year in years:
@@ -202,10 +209,14 @@ def list_rais_files(ftp: ftplib.FTP):
             if m:
                 region, = m.groups()
                 region = region.replace("_", "")
-                yield file | {"year": year, "region": region, "dataset": dataset}
+                yield file | {
+                    "year": year,
+                    "region": region,
+                    "dataset": dataset,
+                }
 
 
-def list_rais_estabelecimentos_files(ftp: ftplib.FTP):
+def list_rais_estabelecimentos_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     dataset = "rais-1985-2017-estabelecimentos"
     years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
     for year in years:
@@ -231,7 +242,7 @@ def list_rais_estabelecimentos_files(ftp: ftplib.FTP):
                 yield file | {"year": year, "dataset": dataset}
 
 
-def list_rais_ignorados_files(ftp: ftplib.FTP):
+def list_rais_ignorados_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     dataset = "rais-1985-2017-ignorados"
     years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
     for year in years:
@@ -245,13 +256,13 @@ def list_rais_ignorados_files(ftp: ftplib.FTP):
                 yield file | {"year": year, "dataset": dataset}
 
 
-def list_rais(ftp: ftplib.FTP):
+def list_rais(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     yield from list_rais_files(ftp)
     yield from list_rais_estabelecimentos_files(ftp)
     yield from list_rais_ignorados_files(ftp)
 
 
-def fetch_rais(ftp: ftplib.FTP, dest_dir: Path, callback: Callable[[dict], Any] = None):
+def fetch_rais(ftp: ftplib.FTP, dest_dir: Path) -> Generator[dict, None, None]:
     for file in list_rais(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_rais_filepath(file, dest_dir)
@@ -259,5 +270,4 @@ def fetch_rais(ftp: ftplib.FTP, dest_dir: Path, callback: Callable[[dict], Any] 
             continue
         file_size = file["size"]
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
-        if callable(callback):
-            callback(file | {"dest_filepath": dest_filepath})
+        yield file | {"filepath": dest_filepath}
