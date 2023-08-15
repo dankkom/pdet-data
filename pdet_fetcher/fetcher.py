@@ -4,7 +4,7 @@ import logging
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Generator
+from typing import Any, Generator
 
 from tqdm import tqdm
 
@@ -165,8 +165,8 @@ def list_caged(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     yield from list_caged_ajustes_files(ftp)
 
 
-
-def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> Generator[dict, None, None]:
+def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
+    metadata_list = []
     for file in list_caged(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_filepath(file, dest_dir)
@@ -174,7 +174,9 @@ def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> Generator[dict, None, None]:
             continue
         file_size = file["size"]
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
-        yield file | {"filepath": dest_filepath}
+        metadata = file | {"filepath": dest_filepath}
+        metadata_list.append(metadata)
+    return metadata_list
 
 
 # -----------------------------------------------------------------------------
@@ -262,7 +264,8 @@ def list_rais(ftp: ftplib.FTP) -> Generator[dict, None, None]:
     yield from list_rais_ignorados_files(ftp)
 
 
-def fetch_rais(ftp: ftplib.FTP, dest_dir: Path) -> Generator[dict, None, None]:
+def fetch_rais(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
+    metadata_list = []
     for file in list_rais(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_rais_filepath(file, dest_dir)
@@ -270,4 +273,6 @@ def fetch_rais(ftp: ftplib.FTP, dest_dir: Path) -> Generator[dict, None, None]:
             continue
         file_size = file["size"]
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
-        yield file | {"filepath": dest_filepath}
+        metadata = file | {"filepath": dest_filepath}
+        metadata_list.append(metadata)
+    return metadata_list
