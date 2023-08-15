@@ -7,15 +7,13 @@ from pdet_fetcher import fetcher
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output", required=True, type=Path)
+    parser.add_argument("-data-dir", required=True, type=Path)
     args = parser.parse_args()
+    dest_dir = args.data_dir
 
-    dest_dir = args.output
     ftp = fetcher.connect()
-    for file in fetcher.fetch_rais(ftp=ftp, dest_dir=dest_dir):
-        pass
-    for file in fetcher.fetch_caged(ftp=ftp, dest_dir=dest_dir):
-        pass
+    fetcher.fetch_rais(ftp=ftp, dest_dir=dest_dir)
+    fetcher.fetch_caged(ftp=ftp, dest_dir=dest_dir)
     ftp.close()
 
 
