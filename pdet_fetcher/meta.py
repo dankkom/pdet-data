@@ -37,39 +37,89 @@ year_pattern = r"\d{4}"
 
 datasets = {
     "caged": {
-        "path": BASE_PATH + "/CAGED",
-        "filename_pattern": r"^cagedest_({month})({year})\.7z$".format(month=month_pattern, year=year_pattern),
+        "variations": (
+            {
+                "path": BASE_PATH + "/CAGED",
+                "dir_pattern": r"^({year})$".format(year=year_pattern),
+                "dir_pattern_groups": ("year",),
+                "fn_pattern": r"^cagedest_({month})({year})\.7z$".format(month=month_pattern, year=year_pattern),
+                "fn_pattern_groups": ("month", "year"),
+            },
+        ),
     },
     "caged-ajustes": {
-        "path": BASE_PATH + "/CAGED_AJUSTES",
-        "filename_pattern": r"^cagedest_ajustes_({month})({year})\.7z$".format(month=month_pattern, year=year_pattern),
-    },
-    "caged-ajustes-2002a2009": {
-        "path": BASE_PATH + "/CAGED_AJUSTES/2002a2009",
-        "filename_pattern": r"^cagedest_ajustes_({year})\.7z$".format(year=year_pattern),
+        "variations": (
+            {
+                "path": BASE_PATH + "/CAGED_AJUSTES/2002a2009",
+                "dir_pattern": None,
+                "dir_pattern_groups": None,
+                "fn_pattern": r"^cagedest_ajustes_({year})\.7z$".format(year=year_pattern),
+                "fn_pattern_groups": ("year",),
+            },
+            {
+                "path": BASE_PATH + "/CAGED_AJUSTES",
+                "dir_pattern": r"^({year})$".format(year=year_pattern),
+                "dir_pattern_groups": ("year",),
+                "fn_pattern": r"^cagedest_ajustes_({month})({year})\.7z$".format(month=month_pattern, year=year_pattern),
+                "fn_pattern_groups": ("month", "year"),
+            },
+        ),
     },
     "novo-caged": {
-        "path": BASE_PATH + "/NOVO_CAGED",
-        "filename_pattern": r"^caged(exc|for|mov)({year})({month})\.7z$".format(year=year_pattern, month=month_pattern),
+        "variations": (
+            {
+                "path": BASE_PATH + "/NOVO_CAGED",
+                "dir_pattern": (
+                    r"^({year})$".format(year=year_pattern),
+                    r"^({year})({month})$".format(year=year_pattern, month=month_pattern),
+                ),
+                "dir_pattern_groups": (("year",), ("year", "month")),
+                "fn_pattern": r"^caged(exc|for|mov)({year})({month})\.7z$".format(year=year_pattern, month=month_pattern),
+                "fn_pattern_groups": (None, "year", "month"),
+            },
+        ),
     },
-    "rais-1985-2017": {
-        "path": BASE_PATH + "/RAIS",
-        "filename_pattern": r"^({uf_pattern})({year})\.7z$".format(uf_pattern=uf_pattern, year=year_pattern),
-    },
-    "rais-1985-2017-estabelecimentos": {
-        "path": BASE_PATH + "/RAIS",
-        "filename_pattern": r"^estb({year})\.(7z|zip)$".format(year=year_pattern),
-    },
-    "rais-1985-2017-ignorados": {
-        "path": BASE_PATH + "/RAIS",
-        "filename_pattern": r"^ignora(|n)do(|s)({year})\.7z$".format(year=year_pattern),
-    },
-    "rais": {
-        "path": BASE_PATH + "/RAIS",
-        "filename_pattern": r"^rais_vinc_pub_(centro_oeste|mg_es_rj|nordeste|norte|sp|sul)\.7z$",
+    "rais-vinculos": {
+        "variations": (
+            {
+                "path": BASE_PATH + "/RAIS",
+                "dir_pattern": r"^({year})$".format(year=year_pattern),
+                "dir_pattern_groups": ("year",),
+                "fn_pattern": r"^({uf_pattern})({year})\.7z$".format(uf_pattern=uf_pattern, year=year_pattern),
+                "fn_pattern_groups": ("region", "year"),
+            },
+            {
+                "path": BASE_PATH + "/RAIS",
+                "dir_pattern": r"^({year})$".format(year=year_pattern),
+                "dir_pattern_groups": ("year",),
+                "fn_pattern": r"^ignora(|n)do(|s)({year})\.7z$".format(year=year_pattern),
+                "fn_pattern_groups": (None, None, "year"),
+            },
+            {
+                "path": BASE_PATH + "/RAIS",
+                "dir_pattern": r"^({year})$".format(year=year_pattern),
+                "dir_pattern_groups": ("year",),
+                "fn_pattern": r"^rais_vinc_pub_(centro_oeste|mg_es_rj|nordeste|norte|sp|sul)\.7z$",
+                "fn_pattern_groups": ("region",),
+            },
+        ),
     },
     "rais-estabelecimentos": {
-        "path": BASE_PATH + "/RAIS",
-        "filename_pattern": r"^rais_estab_pub\.7z$",
+        "variations": (
+            {
+                "path": BASE_PATH + "/RAIS",
+                "dir_pattern": r"^({year})$".format(year=year_pattern),
+                "dir_pattern_groups": ("year",),
+                "fn_pattern": r"^estb({year})\.(7z|zip)$".format(year=year_pattern),
+                "fn_pattern_groups": ("year", "extension"),
+            },
+            {
+                "path": BASE_PATH + "/RAIS",
+                "dir_pattern": r"^({year})$".format(year=year_pattern),
+                "dir_pattern_groups": ("year",),
+                "fn_pattern": r"^rais_estab_pub\.7z$",
+                "fn_pattern_groups": (),
+            },
+        ),
     },
 }

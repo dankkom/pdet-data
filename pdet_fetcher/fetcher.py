@@ -4,7 +4,7 @@ import logging
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any, Generator, Sequence
 
 from tqdm import tqdm
 
@@ -96,73 +96,76 @@ def fetch_file(ftp: ftplib.FTP, ftp_filepath: str, dest_filepath: Path, **kwargs
     progress.close()
 
 
-def get_years(fi: list[dict]) -> list[int]:
-    years = []
+def _get_date_dirs(fi: list[dict], dir_pattern: str, dir_pattern_groups: Sequence[str]) -> list[dict]:
+    """Filters list of directories in FTP server that groups files by date."""
+    date_dirs = []
     for f in fi:
         if f["size"] is not None:
             continue
-        m = re.match(r"^(\d{4})$", f["name"])
+        m = re.match(dir_pattern, f["name"])
         if m:
-            year = int(m.group(1))
-            years.append(year)
-    return years
+            group_meta = {"dir": f["name"]}
+            for i, group in enumerate(dir_pattern_groups):
+                text = m.groups()[i]
+                group_meta.update({group: text})
+            date_dirs.append(group_meta)
+    return date_dirs
+
+
+def _get_group_meta(m: re.Match, variation: dict) -> dict:
+    """Return a dictionary with info in a file name given by variation's
+    fn_pattern.
+    """
+    group_meta = {}
+    for group in variation["fn_pattern_groups"]:
+        if not group:
+            continue
+        index = variation["fn_pattern_groups"].index(group)
+        text = m.groups()[index].replace("_", "")
+        group_meta.update({group: text})
+    return group_meta
+
+
+def _list_variation_files(ftp: ftplib.FTP, variation: dict) -> list[dict]:
+    ftp_path = variation["path"]
+    if variation["dir_pattern"]:
+        date_dirs = _get_date_dirs(
+            fi=list_files(ftp, directory=ftp_path),
+            dir_pattern=variation["dir_pattern"],
+            dir_pattern_groups=variation["dir_pattern_groups"],
+        )
+        for date_dir_meta in date_dirs:
+            date_dir = date_dir_meta["dir"]
+            files = list_files(ftp, directory=f"{ftp_path}/{date_dir}")
+            yield from (f | date_dir_meta for f in files)
+    else:
+        files = list_files(ftp, directory=ftp_path)
+        yield from (f | {"year": None} for f in files)
+
+
+def _get_variation_files_metadata(ftp: ftplib.FTP, variation: dict) -> Generator[dict, None, None]:
+    for file in _list_variation_files(ftp=ftp, variation=variation):
+        m = re.match(
+            variation["fn_pattern"],
+            file["name"].lower(),
+        )
+        if m:
+            group_meta = _get_group_meta(m, variation=variation)
+            yield file | group_meta
+
+
+def _list_dataset_files(ftp: ftplib.FTP, dataset: str) -> Generator[dict, None, None]:
+    for variation in datasets[dataset]["variations"]:
+        for f in _get_variation_files_metadata(ftp=ftp, variation=variation):
+            yield f | {"dataset": dataset}
 
 
 # -----------------------------------------------------------------------------
 # ---------------------------------- CAGED ------------------------------------
 # -----------------------------------------------------------------------------
-def list_caged_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
-    dataset = "caged"
-    years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
-    for year in years:
-        files = list_files(ftp, directory=f"{datasets[dataset]['path']}/{year}")
-        for file in files:
-            m = re.match(
-                datasets[dataset]["filename_pattern"],
-                file["name"].lower(),
-            )
-            if m:
-                month, year = m.groups()
-                yield file | {
-                    "year": int(year),
-                    "month": int(month),
-                    "dataset": dataset,
-                }
-
-
-def list_caged_ajustes_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
-    dataset = "caged-ajustes-2002a2009"
-    files = list_files(ftp, directory=datasets[dataset]["path"])
-    for file in files:
-        m = re.match(
-            datasets[dataset]["filename_pattern"],
-            file["name"].lower(),
-        )
-        if m:
-            year, = m.groups()
-            yield file | {"year": int(year), "dataset": dataset}
-
-    dataset = "caged-ajustes"
-    years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
-    for year in years:
-        files = list_files(ftp, directory=f"{datasets[dataset]['path']}/{year}")
-        for file in files:
-            m = re.match(
-                datasets[dataset]["filename_pattern"],
-                file["name"].lower(),
-            )
-            if m:
-                month, year = m.groups()
-                yield file | {
-                    "year": int(year),
-                    "month": int(month),
-                    "dataset": dataset,
-                }
-
-
 def list_caged(ftp: ftplib.FTP) -> Generator[dict, None, None]:
-    yield from list_caged_files(ftp)
-    yield from list_caged_ajustes_files(ftp)
+    for dataset in ("caged", "caged-ajustes"):
+        yield from _list_dataset_files(ftp=ftp, dataset=dataset)
 
 
 def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
@@ -182,86 +185,9 @@ def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
 # -----------------------------------------------------------------------------
 # ----------------------------------- RAIS ------------------------------------
 # -----------------------------------------------------------------------------
-def list_rais_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
-    dataset = "rais-1985-2017"
-    years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
-    for year in years:
-        files = list_files(ftp, directory=f"{datasets[dataset]['path']}/{year}")
-        for file in files:
-            m = re.match(
-                datasets[dataset]["filename_pattern"],
-                file["name"].lower(),
-            )
-            if m:
-                uf, year = m.groups()
-                yield file | {
-                    "year": int(year),
-                    "uf": uf,
-                    "dataset": dataset,
-                }
-    dataset = "rais"
-    years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
-    for year in years:
-        files = list_files(ftp, directory=f"{datasets[dataset]['path']}/{year}")
-        for file in files:
-            m = re.match(
-                datasets[dataset]["filename_pattern"],
-                file["name"].lower(),
-            )
-            if m:
-                region, = m.groups()
-                region = region.replace("_", "")
-                yield file | {
-                    "year": year,
-                    "region": region,
-                    "dataset": dataset,
-                }
-
-
-def list_rais_estabelecimentos_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
-    dataset = "rais-1985-2017-estabelecimentos"
-    years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
-    for year in years:
-        files = list_files(ftp, directory=f"{datasets[dataset]['path']}/{year}")
-        for file in files:
-            m = re.match(
-                datasets[dataset]["filename_pattern"],
-                file["name"].lower(),
-            )
-            if m:
-                year, _ = m.groups()
-                yield file | {"year": int(year), "dataset": dataset}
-    dataset = "rais-estabelecimentos"
-    years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
-    for year in years:
-        files = list_files(ftp, directory=f"{datasets[dataset]['path']}/{year}")
-        for file in files:
-            m = re.match(
-                datasets[dataset]["filename_pattern"],
-                file["name"].lower(),
-            )
-            if m:
-                yield file | {"year": year, "dataset": dataset}
-
-
-def list_rais_ignorados_files(ftp: ftplib.FTP) -> Generator[dict, None, None]:
-    dataset = "rais-1985-2017-ignorados"
-    years = get_years(list_files(ftp, directory=datasets[dataset]["path"]))
-    for year in years:
-        files = list_files(ftp, directory=f"{datasets[dataset]['path']}/{year}")
-        for file in files:
-            m = re.match(
-                datasets[dataset]["filename_pattern"],
-                file["name"].lower(),
-            )
-            if m:
-                yield file | {"year": year, "dataset": dataset}
-
-
 def list_rais(ftp: ftplib.FTP) -> Generator[dict, None, None]:
-    yield from list_rais_files(ftp)
-    yield from list_rais_estabelecimentos_files(ftp)
-    yield from list_rais_ignorados_files(ftp)
+    for dataset in ("rais-estabelecimentos", "rais-vinculos"):
+        yield from _list_dataset_files(ftp=ftp, dataset=dataset)
 
 
 def fetch_rais(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
