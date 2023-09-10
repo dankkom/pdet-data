@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from pdet_fetcher import fetcher
+from pdet_fetcher import fetch
 
 
 def main():
@@ -11,9 +11,9 @@ def main():
     args = parser.parse_args()
     dest_dir = args.data_dir
 
-    ftp = fetcher.connect()
-    fetcher.fetch_rais(ftp=ftp, dest_dir=dest_dir)
-    fetcher.fetch_caged(ftp=ftp, dest_dir=dest_dir)
+    ftp = fetch.connect()
+    fetch.fetch_rais(ftp=ftp, dest_dir=dest_dir)
+    fetch.fetch_caged(ftp=ftp, dest_dir=dest_dir)
     ftp.close()
 
 
