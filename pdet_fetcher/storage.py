@@ -29,6 +29,31 @@ def get_caged_filepath(file_metadata: dict, dest_dir: Path) -> Path:
     return dest_dir / dataset / year / get_caged_filename(file_metadata)
 
 
+def get_caged_2020_filename(file_metadata: dict) -> str:
+    # dataset part
+    dataset = file_metadata["dataset"]
+
+    # partition part
+    year = file_metadata["year"]
+    month = file_metadata["month"]
+    tipo = file_metadata["type"]
+    partition = f"{year:04}{month:02}-{tipo}"
+
+    # modified part
+    modified = file_metadata["datetime"]
+
+    # extension part
+    extension = file_metadata["extension"]
+
+    return f"{dataset}_{partition}_{modified:%Y%m%d}.{extension}"
+
+
+def get_caged_2020_filepath(file_metadata: dict, dest_dir: Path) -> Path:
+    dataset = file_metadata["dataset"]
+    year = str(file_metadata["year"])
+    return dest_dir / dataset / year / get_caged_2020_filename(file_metadata)
+
+
 # -----------------------------------------------------------------------------
 # ----------------------------------- RAIS ------------------------------------
 # -----------------------------------------------------------------------------
