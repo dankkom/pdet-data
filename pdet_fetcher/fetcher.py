@@ -24,6 +24,9 @@ def connect() -> ftplib.FTP:
 @lru_cache
 def list_files(ftp: ftplib.FTP, directory: str) -> list[dict]:
     """List all files in the current directory."""
+
+    logger.info(f"Listing %s", directory)
+
     ftp_lines = []
     ftp.cwd(directory)
     ftp.retrlines("LIST", ftp_lines.append)
