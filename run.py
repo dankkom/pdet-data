@@ -14,6 +14,7 @@ def main():
     ftp = fetch.connect()
     fetch.fetch_rais(ftp=ftp, dest_dir=dest_dir)
     fetch.fetch_caged(ftp=ftp, dest_dir=dest_dir)
+    fetch.fetch_caged_2020(ftp=ftp, dest_dir=dest_dir)
     ftp.close()
 
 
