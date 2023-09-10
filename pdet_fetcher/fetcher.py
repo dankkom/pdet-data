@@ -9,7 +9,11 @@ from typing import Any, Generator, Sequence
 from tqdm import tqdm
 
 from .meta import datasets
-from .storage import get_caged_filepath, get_rais_filepath
+from .storage import (
+    get_caged_2020_filepath,
+    get_caged_filepath,
+    get_rais_filepath,
+)
 
 FTP_HOST = "ftp.mtps.gov.br"
 logger = logging.getLogger(__name__)
@@ -212,6 +216,20 @@ def list_caged_2020(ftp: ftplib.FTP) -> Generator[dict, None, None]:
                     if m:
                         group_meta = _get_group_meta(m, variation=variation)
                         yield file | group_meta | date_dir2_meta | {"dataset": dataset}
+
+
+def fetch_caged_2020(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
+    metadata_list = []
+    for file in list_caged_2020(ftp):
+        ftp_filepath = file["full_path"]
+        dest_filepath = get_caged_2020_filepath(file, dest_dir)
+        if dest_filepath.exists():
+            continue
+        file_size = file["size"]
+        fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
+        metadata = file | {"filepath": dest_filepath}
+        metadata_list.append(metadata)
+    return metadata_list
 
 
 # -----------------------------------------------------------------------------
