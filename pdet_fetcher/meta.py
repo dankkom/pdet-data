@@ -65,17 +65,17 @@ datasets = {
             },
         ),
     },
-    "novo-caged": {
+    "caged-2020": {
         "variations": (
             {
-                "path": BASE_PATH + "/NOVO_CAGED",
+                "path": BASE_PATH + "/NOVO CAGED",
                 "dir_pattern": (
                     r"^({year})$".format(year=year_pattern),
                     r"^({year})({month})$".format(year=year_pattern, month=month_pattern),
                 ),
                 "dir_pattern_groups": (("year",), ("year", "month")),
                 "fn_pattern": r"^caged(exc|for|mov)({year})({month})\.7z$".format(year=year_pattern, month=month_pattern),
-                "fn_pattern_groups": (None, "year", "month"),
+                "fn_pattern_groups": ("type", "year", "month"),
             },
         ),
     },
