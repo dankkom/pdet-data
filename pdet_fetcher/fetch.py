@@ -180,7 +180,7 @@ def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
     for file in list_caged(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_filepath(file, dest_dir)
-        if dest_filepath.exists():
+        if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
             continue
         file_size = file["size"]
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
@@ -223,7 +223,7 @@ def fetch_caged_2020(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
     for file in list_caged_2020(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_2020_filepath(file, dest_dir)
-        if dest_filepath.exists():
+        if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
             continue
         file_size = file["size"]
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
@@ -245,7 +245,7 @@ def fetch_rais(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
     for file in list_rais(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_rais_filepath(file, dest_dir)
-        if dest_filepath.exists():
+        if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
             continue
         file_size = file["size"]
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
