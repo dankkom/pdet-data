@@ -140,3 +140,9 @@ def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):
     _, columns_dtypes = get_columns_dtypes(columns_names)
     df = convert_columns_dtypes(df, columns_dtypes)
     return df
+
+
+def write_parquet(df: pl.DataFrame, filepath: Path) -> Path:
+    print(f"Writing data to {filepath}")
+    df.write_parquet(filepath)
+    return filepath
