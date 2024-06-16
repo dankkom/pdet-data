@@ -133,7 +133,9 @@ def _get_group_meta(m: re.Match, variation: dict) -> dict:
     return group_meta
 
 
-def _list_variation_files(ftp: ftplib.FTP, variation: dict) -> list[dict]:
+def _list_variation_files(
+    ftp: ftplib.FTP, variation: dict
+) -> Generator[dict, None, None]:
     ftp_path = variation["path"]
     if variation["dir_pattern"]:
         date_dirs = _get_date_dirs(
