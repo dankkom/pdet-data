@@ -8,8 +8,6 @@ from pathlib import Path
 
 from pdet_fetcher import reader
 
-TMP_DIR = Path("C:/tmp")
-
 
 class Decompressor(threading.Thread):
     def __init__(self, q_in: queue.Queue, q_out: queue.Queue):
@@ -45,7 +43,7 @@ class Converter(threading.Thread):
 def decompress(file_metadata) -> dict[str, Path]:
     compressed_filepath = file_metadata["filepath"]
     print(f"Decompressing {compressed_filepath}")
-    tmp_dir = Path(tempfile.mkdtemp(dir=TMP_DIR, suffix="pdet"))
+    tmp_dir = Path(tempfile.mkdtemp(prefix="pdet"))
     command = [
         "7z",
         "e",
