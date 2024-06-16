@@ -1,7 +1,6 @@
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
+import polars as pl
 
 from .constants import (
     RAIS_ESTABELECIMENTOS_COLUMNS,
@@ -30,42 +29,64 @@ def parse_filename(f: Path) -> dict[str, str | int | None]:
     }
 
 
-def to_int(series):
+def to_category(series: pl.Series):
+    def convert(x):
+        try:
+            x = x.strip()
+            if x in NA_VALUES:
+                return None
+            return x
+        except:
+            return None
+
+    return series.apply(convert, return_dtype=pl.String).cast(pl.Categorical)
+
+
+def to_int(series: pl.Series):
     def convert(x):
         try:
             return int(x)
         except:
-            return np.nan
+            return None
 
-    return series.apply(convert)
+    return series.apply(convert, return_dtype=pl.Int64)
 
 
-def to_float(series):
+def to_float(series: pl.Series):
     def convert(x):
         try:
             return float(x.replace(",", "."))
         except:
-            return np.nan
+            return None
 
-    return series.apply(convert)
+    return series.apply(convert, return_dtype=pl.Float64)
 
 
-def to_bool(series):
+def to_bool(series: pl.Series):
     def convert(x):
         try:
             return bool(int(x))
         except:
             return None
 
-    return series.apply(convert)
+    return series.apply(convert, return_dtype=pl.Boolean)
 
 
 def convert_columns_dtypes(df, columns_dtypes):
     for column, dtype_func in columns_dtypes.items():
         if callable(dtype_func):
-            df = df.assign(**{column: lambda x: dtype_func(x[column])})
-        else:
-            df[column] = df[column].astype("category")
+            print(f"Converting {column} to {dtype_func.__name__}")
+            if column in INTEGER_COLUMNS:
+                return_dtype = pl.Int64
+            elif column in NUMERIC_COLUMNS:
+                return_dtype = pl.Float64
+            elif column in BOOLEAN_COLUMNS:
+                return_dtype = pl.Boolean
+            else:
+                return_dtype = None
+            df = df.with_columns(
+                [pl.col(column).map_batches(dtype_func, return_dtype=return_dtype)]
+            )
     return df
 
 
@@ -83,7 +104,7 @@ def get_columns_dtypes(columns: tuple[str]):
     columns_dtypes = {}
     for col, dtype in columns.items():
         if dtype == "TEXT":
-            columns_dtypes[col] = None
+            columns_dtypes[col] = to_category
         if dtype == "INTEGER":
             columns_dtypes[col] = to_int
         elif dtype == "NUMERIC":
@@ -94,62 +115,28 @@ def get_columns_dtypes(columns: tuple[str]):
     return columns, columns_dtypes
 
 
-def reader_rais_vinculos(filepath: Path, year: int, **read_csv_args):
-    for y in RAIS_VINCULOS_COLUMNS:
-        if year < y:
-            break
-        columns_names = RAIS_VINCULOS_COLUMNS[y]
-    dtypes = {}
-    for col in columns_names:
-        if col in INTEGER_COLUMNS:
-            dtypes[col] = "Int64"
-        elif col in NUMERIC_COLUMNS:
-            dtypes[col] = "float"
-        elif col in BOOLEAN_COLUMNS:
-            dtypes[col] = "boolean"
-        else:
-            dtypes[col] = "category"
+def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):
+    if dataset == "vinculos":
+        for y in RAIS_VINCULOS_COLUMNS:
+            if year < y:
+                break
+            columns_names = RAIS_VINCULOS_COLUMNS[y]
+    elif dataset == "estabelecimentos":
+        for y in RAIS_ESTABELECIMENTOS_COLUMNS:
+            if year < y:
+                break
+            columns_names = RAIS_ESTABELECIMENTOS_COLUMNS[y]
     print("Reading", filepath)
-    return pd.read_csv(
+    df = pl.read_csv(
         filepath,
-        engine="python",
-        sep="; *",
-        decimal=",",
+        has_header=True,
+        new_columns=columns_names,
+        separator=";",
         encoding="latin1",
-        skiprows=1,
-        dtype=dtypes,
-        names=columns_names,
-        na_values=NA_VALUES,
+        null_values=NA_VALUES,
+        infer_schema_length=0,
         **read_csv_args,
     )
-
-
-def reader_rais_estabelecimentos(filepath: Path, year: int, **read_csv_args):
-    for y in RAIS_ESTABELECIMENTOS_COLUMNS:
-        if year < y:
-            break
-        columns_names = RAIS_ESTABELECIMENTOS_COLUMNS[y]
-    dtypes = {}
-    for col in columns_names:
-        if col in INTEGER_COLUMNS:
-            dtypes[col] = "Int64"
-        elif col in NUMERIC_COLUMNS:
-            dtypes[col] = "float"
-        elif col in BOOLEAN_COLUMNS:
-            dtypes[col] = "boolean"
-        else:
-            dtypes[col] = "category"
-    print("Reading", filepath)
-    return pd.read_csv(
-        filepath,
-        engine="python",
-        sep="; *",
-        decimal=",",
-        thousands=".",
-        encoding="latin1",
-        skiprows=1,
-        dtype=dtypes,
-        names=columns_names,
-        na_values=NA_VALUES,
-        **read_csv_args,
-    )
+    _, columns_dtypes = get_columns_dtypes(columns_names)
+    df = convert_columns_dtypes(df, columns_dtypes)
+    return df
