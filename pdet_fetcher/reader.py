@@ -24,7 +24,7 @@ def parse_filename(f: Path) -> dict[str, str | int | None]:
         uf = None
     return {
         "filepath": f,
-        "filename": name,
+        "name": name,
         "year": int(year),
         "uf": uf,
     }
@@ -145,6 +145,7 @@ def reader_rais_estabelecimentos(filepath: Path, year: int, **read_csv_args):
         engine="python",
         sep="; *",
         decimal=",",
+        thousands=".",
         encoding="latin1",
         skiprows=1,
         dtype=dtypes,
