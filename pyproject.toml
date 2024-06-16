@@ -10,6 +10,8 @@ requires-python = ">=3.10"
 
 dependencies = [
     "tqdm",
+    "pandas",
+    "pyarrow",
 ]
 
 [build-system]
