@@ -126,7 +126,7 @@ def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):
             if year < y:
                 break
             columns_names = RAIS_ESTABELECIMENTOS_COLUMNS[y]
-    print("Reading", filepath)
+    print("Reading", dataset, filepath)
     df = pl.read_csv(
         filepath,
         has_header=True,
@@ -143,6 +143,7 @@ def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):
 
 
 def write_parquet(df: pl.DataFrame, filepath: Path) -> Path:
-    print(f"Writing data to {filepath}")
+    print("Writing data to", filepath)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
     df.write_parquet(filepath)
     return filepath
