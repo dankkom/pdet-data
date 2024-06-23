@@ -31,12 +31,12 @@ def decompress(file_metadata) -> dict[str, Path]:
     }
 
 
-def convert_vinculos(decompressed_filepath, dest_filepath, year):
+def convert_rais(decompressed_filepath, dataset, dest_filepath, year):
     try:
         df = reader.read_rais(
             decompressed_filepath,
             year=year,
-            dataset="vinculos",
+            dataset=dataset,
         )
         reader.write_parquet(df, dest_filepath)
     except pl.exceptions.ComputeError as e:
@@ -59,16 +59,17 @@ def main():
     data_dir = args.data_dir
     dest_dir = args.dest_dir
 
-    for file in data_dir.glob("**/*.7z"):
+    for file in data_dir.glob("**/rais-*.*"):
         file_metadata = reader.parse_filename(file)
         year = file_metadata["year"]
         name = file_metadata["name"]
+        dataset = "vinculos" if "vinculos" in name else "estabelecimentos"
         dest_filepath = dest_dir / str(year) / f"{name}.parquet"
         if dest_filepath.exists():
             continue
         decompressed = decompress(file_metadata)
         decompressed_filepath = decompressed["decompressed_filepath"]
-        convert_vinculos(decompressed_filepath, dest_filepath, year)
+        convert_rais(decompressed_filepath, dataset, dest_filepath, year)
         shutil.rmtree(decompressed["tmp_dir"])
         print(f"Done {file}")
 
