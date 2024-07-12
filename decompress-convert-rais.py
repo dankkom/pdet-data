@@ -1,34 +1,10 @@
 import argparse
-import subprocess
-import tempfile
 import shutil
 from pathlib import Path
 
 import polars as pl
 
 from pdet_fetcher import reader
-
-
-def decompress(file_metadata) -> dict[str, Path]:
-    compressed_filepath = file_metadata["filepath"]
-    print(f"Decompressing {compressed_filepath}")
-    tmp_dir = Path(tempfile.mkdtemp(prefix="pdet"))
-    command = [
-        "7z",
-        "e",
-        str(compressed_filepath),
-        f"-o{tmp_dir}",
-    ]
-    subprocess.run(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    decompressed_filepath = next(tmp_dir.iterdir())
-    return file_metadata | {
-        "tmp_dir": tmp_dir,
-        "decompressed_filepath": decompressed_filepath,
-    }
 
 
 def convert_rais(decompressed_filepath, dataset, dest_filepath, year):
@@ -67,7 +43,7 @@ def main():
         dest_filepath = dest_dir / str(year) / f"{name}.parquet"
         if dest_filepath.exists():
             continue
-        decompressed = decompress(file_metadata)
+        decompressed = reader.decompress(file_metadata)
         decompressed_filepath = decompressed["decompressed_filepath"]
         convert_rais(decompressed_filepath, dataset, dest_filepath, year)
         shutil.rmtree(decompressed["tmp_dir"])

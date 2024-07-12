@@ -1,4 +1,7 @@
+import subprocess
+import tempfile
 from pathlib import Path
+from typing import Any
 
 import polars as pl
 
@@ -147,3 +150,25 @@ def write_parquet(df: pl.DataFrame, filepath: Path) -> Path:
     filepath.parent.mkdir(parents=True, exist_ok=True)
     df.write_parquet(filepath)
     return filepath
+
+
+def decompress(file_metadata: dict[str, Any]) -> dict[str, Path]:
+    compressed_filepath = file_metadata["filepath"]
+    print(f"Decompressing {compressed_filepath}")
+    tmp_dir = Path(tempfile.mkdtemp(prefix="pdet"))
+    command = [
+        "7z",
+        "e",
+        str(compressed_filepath),
+        f"-o{tmp_dir}",
+    ]
+    subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    decompressed_filepath = next(tmp_dir.iterdir())
+    return file_metadata | {
+        "tmp_dir": tmp_dir,
+        "decompressed_filepath": decompressed_filepath,
+    }
