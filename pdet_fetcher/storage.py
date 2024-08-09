@@ -20,7 +20,7 @@ def get_caged_filename(file_metadata: dict) -> str:
     # extension part
     extension = file_metadata["extension"]
 
-    return f"{dataset}_{partition}_{modified:%Y%m%d}.{extension}"
+    return f"{dataset}_{partition}@{modified:%Y%m%d}.{extension}"
 
 
 def get_caged_filepath(file_metadata: dict, dest_dir: Path) -> Path:
@@ -45,7 +45,7 @@ def get_caged_2020_filename(file_metadata: dict) -> str:
     # extension part
     extension = file_metadata["extension"]
 
-    return f"{dataset}_{partition}_{modified:%Y%m%d}.{extension}"
+    return f"{dataset}_{partition}@{modified:%Y%m%d}.{extension}"
 
 
 def get_caged_2020_filepath(file_metadata: dict, dest_dir: Path) -> Path:
@@ -73,7 +73,7 @@ def get_rais_filename(file_metadata: dict) -> str:
     # extension part
     extension = file_metadata["extension"]
 
-    return f"{dataset}_{partition}_{modified:%Y%m%d}.{extension}"
+    return f"{dataset}_{partition}@{modified:%Y%m%d}.{extension}"
 
 
 def get_rais_filepath(file_metadata: dict, dest_dir: Path) -> Path:
