@@ -42,7 +42,9 @@ datasets = {
                 "path": BASE_PATH + "/CAGED",
                 "dir_pattern": r"^({year})$".format(year=year_pattern),
                 "dir_pattern_groups": ("year",),
-                "fn_pattern": r"^cagedest_({month})({year})\.7z$".format(month=month_pattern, year=year_pattern),
+                "fn_pattern": r"^cagedest_({month})({year})\.7z$".format(
+                    month=month_pattern, year=year_pattern
+                ),
                 "fn_pattern_groups": ("month", "year"),
             },
         ),
@@ -53,29 +55,73 @@ datasets = {
                 "path": BASE_PATH + "/CAGED_AJUSTES/2002a2009",
                 "dir_pattern": None,
                 "dir_pattern_groups": None,
-                "fn_pattern": r"^cagedest_ajustes_({year})\.7z$".format(year=year_pattern),
+                "fn_pattern": r"^cagedest_ajustes_({year})\.7z$".format(
+                    year=year_pattern
+                ),
                 "fn_pattern_groups": ("year",),
             },
             {
                 "path": BASE_PATH + "/CAGED_AJUSTES",
                 "dir_pattern": r"^({year})$".format(year=year_pattern),
                 "dir_pattern_groups": ("year",),
-                "fn_pattern": r"^cagedest_ajustes_({month})({year})\.7z$".format(month=month_pattern, year=year_pattern),
+                "fn_pattern": r"^cagedest_ajustes_({month})({year})\.7z$".format(
+                    month=month_pattern, year=year_pattern
+                ),
                 "fn_pattern_groups": ("month", "year"),
             },
         ),
     },
-    "caged-2020": {
+    "caged-2020-exc": {
         "variations": (
             {
                 "path": BASE_PATH + "/NOVO CAGED",
                 "dir_pattern": (
                     r"^({year})$".format(year=year_pattern),
-                    r"^({year})({month})$".format(year=year_pattern, month=month_pattern),
+                    r"^({year})({month})$".format(
+                        year=year_pattern, month=month_pattern
+                    ),
                 ),
                 "dir_pattern_groups": (("year",), ("year", "month")),
-                "fn_pattern": r"^caged(exc|for|mov)({year})({month})\.7z$".format(year=year_pattern, month=month_pattern),
-                "fn_pattern_groups": ("type", "year", "month"),
+                "fn_pattern": r"^cagedexc({year})({month})\.7z$".format(
+                    year=year_pattern, month=month_pattern
+                ),
+                "fn_pattern_groups": ("year", "month"),
+            },
+        ),
+    },
+    "caged-2020-for": {
+        "variations": (
+            {
+                "path": BASE_PATH + "/NOVO CAGED",
+                "dir_pattern": (
+                    r"^({year})$".format(year=year_pattern),
+                    r"^({year})({month})$".format(
+                        year=year_pattern, month=month_pattern
+                    ),
+                ),
+                "dir_pattern_groups": (("year",), ("year", "month")),
+                "fn_pattern": r"^cagedfor({year})({month})\.7z$".format(
+                    year=year_pattern, month=month_pattern
+                ),
+                "fn_pattern_groups": ("year", "month"),
+            },
+        ),
+    },
+    "caged-2020-mov": {
+        "variations": (
+            {
+                "path": BASE_PATH + "/NOVO CAGED",
+                "dir_pattern": (
+                    r"^({year})$".format(year=year_pattern),
+                    r"^({year})({month})$".format(
+                        year=year_pattern, month=month_pattern
+                    ),
+                ),
+                "dir_pattern_groups": (("year",), ("year", "month")),
+                "fn_pattern": r"^cagedmov({year})({month})\.7z$".format(
+                    year=year_pattern, month=month_pattern
+                ),
+                "fn_pattern_groups": ("year", "month"),
             },
         ),
     },
@@ -85,14 +131,18 @@ datasets = {
                 "path": BASE_PATH + "/RAIS",
                 "dir_pattern": r"^({year})$".format(year=year_pattern),
                 "dir_pattern_groups": ("year",),
-                "fn_pattern": r"^({uf_pattern})({year})\.7z$".format(uf_pattern=uf_pattern, year=year_pattern),
+                "fn_pattern": r"^({uf_pattern})({year})\.7z$".format(
+                    uf_pattern=uf_pattern, year=year_pattern
+                ),
                 "fn_pattern_groups": ("region", "year"),
             },
             {
                 "path": BASE_PATH + "/RAIS",
                 "dir_pattern": r"^({year})$".format(year=year_pattern),
                 "dir_pattern_groups": ("year",),
-                "fn_pattern": r"^ignora(|n)do(|s)({year})\.7z$".format(year=year_pattern),
+                "fn_pattern": r"^ignora(|n)do(|s)({year})\.7z$".format(
+                    year=year_pattern
+                ),
                 "fn_pattern_groups": (None, None, "year"),
             },
             {

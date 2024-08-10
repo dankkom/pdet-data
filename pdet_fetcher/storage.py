@@ -54,8 +54,7 @@ def get_caged_2020_filename(file_metadata: dict) -> str:
     # partition part
     year = file_metadata["year"]
     month = file_metadata["month"]
-    tipo = file_metadata["type"]
-    partition = f"{year:04}{month:02}-{tipo}"
+    partition = f"{year:04}{month:02}"
 
     # modified part
     modified = file_metadata["datetime"]

@@ -232,7 +232,59 @@ def fetch_caged_docs(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
 
 
 def list_caged_2020(ftp: ftplib.FTP) -> Generator[dict, None, None]:
-    dataset = "caged-2020"
+    dataset = "caged-2020-exc"
+    for variation in datasets[dataset]["variations"]:
+        ftp_path = variation["path"]
+        date_dirs1 = _get_date_dirs(
+            fi=list_files(ftp, directory=ftp_path),
+            dir_pattern=variation["dir_pattern"][0],
+            dir_pattern_groups=variation["dir_pattern_groups"][0],
+        )
+        for date_dir1_meta in date_dirs1:
+            date_dir1 = date_dir1_meta["dir"]
+            date_dirs2 = _get_date_dirs(
+                fi=list_files(ftp, directory=f"{ftp_path}/{date_dir1}"),
+                dir_pattern=variation["dir_pattern"][1],
+                dir_pattern_groups=variation["dir_pattern_groups"][1],
+            )
+            for date_dir2_meta in date_dirs2:
+                date_dir2 = date_dir2_meta["dir"]
+                files = list_files(ftp, directory=f"{ftp_path}/{date_dir1}/{date_dir2}")
+                for file in files:
+                    m = re.match(
+                        variation["fn_pattern"],
+                        file["name"].lower(),
+                    )
+                    if m:
+                        group_meta = _get_group_meta(m, variation=variation)
+                        yield file | group_meta | date_dir2_meta | {"dataset": dataset}
+    dataset = "caged-2020-for"
+    for variation in datasets[dataset]["variations"]:
+        ftp_path = variation["path"]
+        date_dirs1 = _get_date_dirs(
+            fi=list_files(ftp, directory=ftp_path),
+            dir_pattern=variation["dir_pattern"][0],
+            dir_pattern_groups=variation["dir_pattern_groups"][0],
+        )
+        for date_dir1_meta in date_dirs1:
+            date_dir1 = date_dir1_meta["dir"]
+            date_dirs2 = _get_date_dirs(
+                fi=list_files(ftp, directory=f"{ftp_path}/{date_dir1}"),
+                dir_pattern=variation["dir_pattern"][1],
+                dir_pattern_groups=variation["dir_pattern_groups"][1],
+            )
+            for date_dir2_meta in date_dirs2:
+                date_dir2 = date_dir2_meta["dir"]
+                files = list_files(ftp, directory=f"{ftp_path}/{date_dir1}/{date_dir2}")
+                for file in files:
+                    m = re.match(
+                        variation["fn_pattern"],
+                        file["name"].lower(),
+                    )
+                    if m:
+                        group_meta = _get_group_meta(m, variation=variation)
+                        yield file | group_meta | date_dir2_meta | {"dataset": dataset}
+    dataset = "caged-2020-mov"
     for variation in datasets[dataset]["variations"]:
         ftp_path = variation["path"]
         date_dirs1 = _get_date_dirs(
