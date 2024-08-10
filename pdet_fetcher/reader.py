@@ -8,7 +8,10 @@ import polars as pl
 
 from .constants import (
     BOOLEAN_COLUMNS,
-    RAIS_VINCULOS_COLUMNS,
+    CAGED_COLUMNS,
+    CAGED_2020_EXC_COLUMNS,
+    CAGED_2020_FOR_COLUMNS,
+    CAGED_2020_MOV_COLUMNS,
     INTEGER_COLUMNS,
     NA_VALUES,
     NUMERIC_COLUMNS,
@@ -38,15 +41,20 @@ def parse_filename(f: Path) -> dict[str, str | int | None]:
     }
 
 
-def convert_columns_dtypes(df, columns_dtypes: dict[str, str]):
-    for column, dtype in columns_dtypes.items():
-        print(f"Converting {column} to {dtype}")
+def convert_columns_dtypes(df):
+    for column in df.columns:
         if column in INTEGER_COLUMNS:
-            df = df.with_columns(pl.col(column).str.replace(" +", "").cast(pl.Int64))
+            df = df.with_columns(
+                pl.col(column)
+                .str.replace(r" +", "")
+                .str.replace(r"\.", "")
+                .cast(pl.Int64)
+            )
         elif column in NUMERIC_COLUMNS:
             df = df.with_columns(
                 pl.col(column)
-                .str.replace(" +", "")
+                .str.replace(r" +", "")
+                .str.replace(r"\.", "")
                 .str.replace(",", ".")
                 .cast(pl.Float64)
             )
@@ -55,20 +63,6 @@ def convert_columns_dtypes(df, columns_dtypes: dict[str, str]):
         else:  # Categorical
             df = df.with_columns(pl.col(column).cast(pl.String).cast(pl.Categorical))
     return df
-
-
-def get_columns_dtypes(columns: dict[str, str]):
-    columns = {col: "TEXT" for col in columns}
-
-    for col in columns:
-        if col in INTEGER_COLUMNS:
-            columns[col] = "INTEGER"
-        elif col in NUMERIC_COLUMNS:
-            columns[col] = "NUMERIC"
-        elif col in BOOLEAN_COLUMNS:
-            columns[col] = "BOOLEAN"
-
-    return columns
 
 
 def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):
@@ -93,8 +87,48 @@ def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):
         infer_schema_length=0,
         **read_csv_args,
     )
-    _, columns_dtypes = get_columns_dtypes(columns_names)
-    df = convert_columns_dtypes(df, columns_dtypes)
+    df = convert_columns_dtypes(df)
+    return df
+
+
+def read_caged(filepath: Path, date: int, dataset: str, **read_csv_args):
+    if dataset == "caged":
+        encoding = "latin-1"
+        for d in CAGED_COLUMNS:
+            if date < d:
+                break
+            columns_names = CAGED_COLUMNS[d]
+    elif dataset == "caged-2020-exc":
+        encoding = "utf-8"
+        for d in CAGED_2020_EXC_COLUMNS:
+            if date < d:
+                break
+            columns_names = CAGED_2020_EXC_COLUMNS[d]
+    elif dataset == "caged-2020-for":
+        encoding = "utf-8"
+        for d in CAGED_2020_FOR_COLUMNS:
+            if date < d:
+                break
+            columns_names = CAGED_2020_FOR_COLUMNS[d]
+    elif dataset == "caged-2020-mov":
+        encoding = "utf-8"
+        for d in CAGED_2020_MOV_COLUMNS:
+            if date < d:
+                break
+            columns_names = CAGED_2020_MOV_COLUMNS[d]
+
+    print("Reading", dataset, filepath)
+    df = pl.read_csv(
+        filepath,
+        has_header=True,
+        new_columns=columns_names,
+        separator=";",
+        encoding=encoding,
+        null_values=NA_VALUES,
+        infer_schema_length=0,
+        **read_csv_args,
+    )
+    df = convert_columns_dtypes(df)
     return df
 
 
