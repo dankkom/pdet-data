@@ -1,3 +1,4 @@
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -6,94 +7,57 @@ from typing import Any
 import polars as pl
 
 from .constants import (
-    RAIS_ESTABELECIMENTOS_COLUMNS,
+    BOOLEAN_COLUMNS,
     RAIS_VINCULOS_COLUMNS,
     INTEGER_COLUMNS,
     NA_VALUES,
     NUMERIC_COLUMNS,
-    BOOLEAN_COLUMNS,
+    RAIS_ESTABELECIMENTOS_COLUMNS,
+    RAIS_VINCULOS_COLUMNS,
 )
 
 
 def parse_filename(f: Path) -> dict[str, str | int | None]:
-    name = f.stem
-    _, year_uf, _ = name.split("_")
-    year_uf = year_uf.split("-")
-    if len(year_uf) == 2:
-        year, uf = year_uf
+    m = re.search(r"^([a-z0-9-]+)_([a-z0-9-]+)@(\d{8})\.(7z|zip)$", f.name)
+    dataset, partition, modification, extension = m.groups()
+    date_uf = partition.split("-")
+    if len(date_uf) == 2:
+        date, uf = date_uf
     else:
-        year = year_uf[0]
+        date = date_uf[0]
         uf = None
     return {
         "filepath": f,
-        "name": name,
-        "year": int(year),
+        "filename": f.name,
+        "name": f.stem,
+        "extension": extension,
+        "modification": modification,
+        "dataset": dataset,
+        "date": int(date),
         "uf": uf,
     }
 
 
-def to_category(series: pl.Series):
-    def convert(x):
-        try:
-            x = x.strip()
-            if x in NA_VALUES:
-                return None
-            return x
-        except:
-            return None
-
-    return series.apply(convert, return_dtype=pl.String).cast(pl.Categorical)
-
-
-def to_int(series: pl.Series):
-    def convert(x):
-        try:
-            return int(x)
-        except:
-            return None
-
-    return series.apply(convert, return_dtype=pl.Int64)
-
-
-def to_float(series: pl.Series):
-    def convert(x):
-        try:
-            return float(x.replace(",", "."))
-        except:
-            return None
-
-    return series.apply(convert, return_dtype=pl.Float64)
-
-
-def to_bool(series: pl.Series):
-    def convert(x):
-        try:
-            return bool(int(x))
-        except:
-            return None
-
-    return series.apply(convert, return_dtype=pl.Boolean)
-
-
-def convert_columns_dtypes(df, columns_dtypes):
-    for column, dtype_func in columns_dtypes.items():
-        if callable(dtype_func):
-            print(f"Converting {column} to {dtype_func.__name__}")
-            if column in INTEGER_COLUMNS:
-                return_dtype = pl.Int64
-            elif column in NUMERIC_COLUMNS:
-                return_dtype = pl.Float64
-            elif column in BOOLEAN_COLUMNS:
-                return_dtype = pl.Boolean
-            else:
-                return_dtype = None
+def convert_columns_dtypes(df, columns_dtypes: dict[str, str]):
+    for column, dtype in columns_dtypes.items():
+        print(f"Converting {column} to {dtype}")
+        if column in INTEGER_COLUMNS:
+            df = df.with_columns(pl.col(column).str.replace(" +", "").cast(pl.Int64))
+        elif column in NUMERIC_COLUMNS:
             df = df.with_columns(
-                [pl.col(column).map_batches(dtype_func, return_dtype=return_dtype)]
+                pl.col(column)
+                .str.replace(" +", "")
+                .str.replace(",", ".")
+                .cast(pl.Float64)
             )
+        elif column in BOOLEAN_COLUMNS:
+            df = df.with_columns(pl.col(column).cast(pl.Int8).cast(pl.Boolean))
+        else:  # Categorical
+            df = df.with_columns(pl.col(column).cast(pl.String).cast(pl.Categorical))
     return df
 
 
-def get_columns_dtypes(columns: tuple[str]):
+def get_columns_dtypes(columns: dict[str, str]):
     columns = {col: "TEXT" for col in columns}
 
     for col in columns:
@@ -104,18 +68,7 @@ def get_columns_dtypes(columns: tuple[str]):
         elif col in BOOLEAN_COLUMNS:
             columns[col] = "BOOLEAN"
 
-    columns_dtypes = {}
-    for col, dtype in columns.items():
-        if dtype == "TEXT":
-            columns_dtypes[col] = to_category
-        if dtype == "INTEGER":
-            columns_dtypes[col] = to_int
-        elif dtype == "NUMERIC":
-            columns_dtypes[col] = to_float
-        elif dtype == "BOOLEAN":
-            columns_dtypes[col] = to_bool
-
-    return columns, columns_dtypes
+    return columns
 
 
 def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):

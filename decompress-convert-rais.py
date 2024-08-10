@@ -37,15 +37,15 @@ def main():
 
     for file in data_dir.glob("**/rais-*.*"):
         file_metadata = reader.parse_filename(file)
-        year = file_metadata["year"]
+        date = file_metadata["date"]
         name = file_metadata["name"]
         dataset = "vinculos" if "vinculos" in name else "estabelecimentos"
-        dest_filepath = dest_dir / str(year) / f"{name}.parquet"
+        dest_filepath = dest_dir / str(date) / f"{name}.parquet"
         if dest_filepath.exists():
             continue
         decompressed = reader.decompress(file_metadata)
         decompressed_filepath = decompressed["decompressed_filepath"]
-        convert_rais(decompressed_filepath, dataset, dest_filepath, year)
+        convert_rais(decompressed_filepath, dataset, dest_filepath, date)
         shutil.rmtree(decompressed["tmp_dir"])
         print(f"Done {file}")
 
