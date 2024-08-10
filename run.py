@@ -13,8 +13,11 @@ def main():
 
     ftp = fetch.connect()
     fetch.fetch_rais(ftp=ftp, dest_dir=dest_dir)
+    fetch.fetch_rais_docs(ftp=ftp, dest_dir=dest_dir)
     fetch.fetch_caged(ftp=ftp, dest_dir=dest_dir)
+    fetch.fetch_caged_docs(ftp=ftp, dest_dir=dest_dir)
     fetch.fetch_caged_2020(ftp=ftp, dest_dir=dest_dir)
+    fetch.fetch_caged_2020_docs(ftp=ftp, dest_dir=dest_dir)
     ftp.close()
 
 

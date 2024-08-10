@@ -123,3 +123,26 @@ datasets = {
         ),
     },
 }
+
+docs = {
+    "rais-vinculos": {
+        "dir_path": BASE_PATH + "/RAIS/Layouts/vínculos",
+        "fn_pattern": r"^.*\.(xls|xlsx|pdf|txt)$",
+    },
+    "rais-estabelecimentos": {
+        "dir_path": BASE_PATH + "/RAIS/Layouts/estabelecimento",
+        "fn_pattern": r"^.*\.(xls|xlsx|pdf|txt)$",
+    },
+    "caged": {
+        "dir_path": BASE_PATH + "/CAGED",
+        "fn_pattern": r"^.*\.(xls|xlsx|pdf|txt)$",
+    },
+    "caged-ajustes": {
+        "dir_path": BASE_PATH + "/CAGED_AJUSTES",
+        "fn_pattern": r"^.*\.(xls|xlsx|pdf|txt)$",
+    },
+    "caged-2020": {
+        "dir_path": BASE_PATH + "/NOVO CAGED",
+        "fn_pattern": r"^.*\.(xls|xlsx|pdf|txt)$",
+    },
+}

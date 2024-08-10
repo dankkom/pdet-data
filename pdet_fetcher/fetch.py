@@ -8,10 +8,13 @@ from typing import Any, Generator, Sequence
 
 from tqdm import tqdm
 
-from .meta import datasets
+from .meta import datasets, docs
 from .storage import (
+    get_caged_2020_docs_filepath,
     get_caged_2020_filepath,
+    get_caged_docs_filepath,
     get_caged_filepath,
+    get_rais_docs_filepath,
     get_rais_filepath,
 )
 
@@ -34,6 +37,7 @@ def list_files(ftp: ftplib.FTP, directory: str) -> list[dict]:
     ftp_lines = []
     ftp.cwd(directory)
     ftp.retrlines("LIST", ftp_lines.append)
+
     # parse files' date, size and name
     def parse_line(line):
         m = re.match(
@@ -68,6 +72,7 @@ def list_files(ftp: ftplib.FTP, directory: str) -> list[dict]:
             return file
         else:
             return None
+
     files = []
     for f in ftp_lines:
         file = parse_line(f)
@@ -95,15 +100,19 @@ def fetch_file(ftp: ftplib.FTP, ftp_filepath: str, dest_filepath: Path, **kwargs
     )
 
     with open(dest_filepath, "wb") as f:
+
         def write(data):
             nonlocal f, progress
             f.write(data)
             progress.update(len(data))
+
         ftp.retrbinary(f"RETR {ftp_filepath}", write)
     progress.close()
 
 
-def _get_date_dirs(fi: list[dict], dir_pattern: str, dir_pattern_groups: Sequence[str]) -> list[dict]:
+def _get_date_dirs(
+    fi: list[dict], dir_pattern: str, dir_pattern_groups: Sequence[str]
+) -> list[dict]:
     """Filters list of directories in FTP server that groups files by date."""
     date_dirs = []
     for f in fi:
@@ -152,7 +161,9 @@ def _list_variation_files(
         yield from (f | {"year": None} for f in files)
 
 
-def _get_variation_files_metadata(ftp: ftplib.FTP, variation: dict) -> Generator[dict, None, None]:
+def _get_variation_files_metadata(
+    ftp: ftplib.FTP, variation: dict
+) -> Generator[dict, None, None]:
     for file in _list_variation_files(ftp=ftp, variation=variation):
         m = re.match(
             variation["fn_pattern"],
@@ -177,11 +188,38 @@ def list_caged(ftp: ftplib.FTP) -> Generator[dict, None, None]:
         yield from _list_dataset_files(ftp=ftp, dataset=dataset)
 
 
+def list_caged_docs(ftp: ftplib.FTP) -> Generator[dict, None, None]:
+    for file in list_files(ftp, directory=docs["caged"]["dir_path"]):
+        if not re.match(docs["caged"]["fn_pattern"], file["name"]):
+            continue
+        yield file | {"dataset": "caged"}
+    for file in list_files(ftp, directory=docs["caged-ajustes"]["dir_path"]):
+        if not re.match(docs["caged-ajustes"]["fn_pattern"], file["name"]):
+            continue
+        yield file | {"dataset": "caged-ajustes"}
+
+
 def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
     metadata_list = []
     for file in list_caged(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_filepath(file, dest_dir)
+        if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
+            logger.info(ftp_filepath, "already fetched")
+            continue
+        file_size = file["size"]
+        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
+        metadata = file | {"filepath": dest_filepath}
+        metadata_list.append(metadata)
+    return metadata_list
+
+
+def fetch_caged_docs(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
+    metadata_list = []
+    for file in list_caged_docs(ftp):
+        ftp_filepath = file["full_path"]
+        dest_filepath = get_caged_docs_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
             logger.info(ftp_filepath, "already fetched")
             continue
@@ -222,11 +260,34 @@ def list_caged_2020(ftp: ftplib.FTP) -> Generator[dict, None, None]:
                         yield file | group_meta | date_dir2_meta | {"dataset": dataset}
 
 
+def list_caged_2020_docs(ftp: ftplib.FTP) -> Generator[dict, None, None]:
+    for file in list_files(ftp, directory=docs["caged-2020"]["dir_path"]):
+        if not re.match(docs["caged-2020"]["fn_pattern"], file["name"]):
+            continue
+        yield file | {"dataset": "caged-2020"}
+
+
 def fetch_caged_2020(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
     metadata_list = []
     for file in list_caged_2020(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_2020_filepath(file, dest_dir)
+        if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
+            logger.info(ftp_filepath, "already fetched")
+            continue
+        file_size = file["size"]
+        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
+        metadata = file | {"filepath": dest_filepath}
+        metadata_list.append(metadata)
+    return metadata_list
+
+
+def fetch_caged_2020_docs(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
+    metadata_list = []
+    for file in list_caged_2020_docs(ftp):
+        ftp_filepath = file["full_path"]
+        dest_filepath = get_caged_2020_docs_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
             logger.info(ftp_filepath, "already fetched")
             continue
@@ -246,11 +307,34 @@ def list_rais(ftp: ftplib.FTP) -> Generator[dict, None, None]:
         yield from _list_dataset_files(ftp=ftp, dataset=dataset)
 
 
+def list_rais_docs(ftp: ftplib.FTP) -> Generator[dict, None, None]:
+    for file in list_files(ftp, directory=docs["rais-vinculos"]["dir_path"]):
+        yield file | {"dataset": "rais-vinculos"}
+    for file in list_files(ftp, directory=docs["rais-estabelecimentos"]["dir_path"]):
+        yield file | {"dataset": "rais-estabelecimentos"}
+
+
 def fetch_rais(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
     metadata_list = []
     for file in list_rais(ftp):
         ftp_filepath = file["full_path"]
         dest_filepath = get_rais_filepath(file, dest_dir)
+        if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
+            logger.info(ftp_filepath, "already fetched")
+            continue
+        file_size = file["size"]
+        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
+        metadata = file | {"filepath": dest_filepath}
+        metadata_list.append(metadata)
+    return metadata_list
+
+
+def fetch_rais_docs(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
+    metadata_list = []
+    for file in list_rais_docs(ftp):
+        ftp_filepath = file["full_path"]
+        dest_filepath = get_rais_docs_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
             logger.info(ftp_filepath, "already fetched")
             continue
