@@ -35,7 +35,7 @@ def main():
     data_dir = args.data_dir
     dest_dir = args.dest_dir
 
-    for file in data_dir.glob("**/caged_*.*"):
+    for file in data_dir.glob("**/caged*.*"):
         file_metadata = reader.parse_filename(file)
         date = file_metadata["date"]
         name = file_metadata["name"]

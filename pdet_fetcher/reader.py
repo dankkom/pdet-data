@@ -9,6 +9,7 @@ import polars as pl
 from .constants import (
     BOOLEAN_COLUMNS,
     CAGED_COLUMNS,
+    CAGED_AJUSTES_COLUMNS,
     CAGED_2020_EXC_COLUMNS,
     CAGED_2020_FOR_COLUMNS,
     CAGED_2020_MOV_COLUMNS,
@@ -41,7 +42,7 @@ def parse_filename(f: Path) -> dict[str, str | int | None]:
     }
 
 
-def convert_columns_dtypes(df):
+def convert_columns_dtypes(df: pl.DataFrame) -> pl.DataFrame:
     for column in df.columns:
         if column in INTEGER_COLUMNS:
             df = df.with_columns(
@@ -61,11 +62,11 @@ def convert_columns_dtypes(df):
         elif column in BOOLEAN_COLUMNS:
             df = df.with_columns(pl.col(column).cast(pl.Int8).cast(pl.Boolean))
         else:  # Categorical
-            df = df.with_columns(pl.col(column).cast(pl.String).cast(pl.Categorical))
+            df = df.with_columns(pl.col(column).cast(pl.Categorical))
     return df
 
 
-def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):
+def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args) -> pl.DataFrame:
     if dataset == "vinculos":
         for y in RAIS_VINCULOS_COLUMNS:
             if year < y:
@@ -91,13 +92,21 @@ def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args):
     return df
 
 
-def read_caged(filepath: Path, date: int, dataset: str, **read_csv_args):
+def read_caged(
+    filepath: Path, date: int, dataset: str, **read_csv_args
+) -> pl.DataFrame:
     if dataset == "caged":
         encoding = "latin-1"
         for d in CAGED_COLUMNS:
             if date < d:
                 break
             columns_names = CAGED_COLUMNS[d]
+    elif dataset == "caged-ajustes":
+        encoding = "latin-1"
+        for d in CAGED_AJUSTES_COLUMNS:
+            if date < d:
+                break
+            columns_names = CAGED_AJUSTES_COLUMNS[d]
     elif dataset == "caged-2020-exc":
         encoding = "utf-8"
         for d in CAGED_2020_EXC_COLUMNS:
