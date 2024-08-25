@@ -11,13 +11,11 @@ def list_files(ftp, dest_dir):
             if dest_filepath.exists():
                 continue
             print(f["full_path"], "-->", dest_filepath)
-
         for f in fetch.list_rais(ftp):
             dest_filepath = storage.get_rais_filepath(f, dest_dir)
             if dest_filepath.exists():
                 continue
             print(f["full_path"], "-->", dest_filepath)
-
         for f in fetch.list_caged_2020(ftp):
             pprint(f)
             dest_filepath = storage.get_caged_2020_filepath(f, dest_dir)
