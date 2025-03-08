@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 from pprint import pprint
 
-from pdet_fetcher import fetch, storage
+from pdet_data import fetch, storage
 
 
 def list_files(ftp, dest_dir):

@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from pdet_fetcher import fetch
+from pdet_data import fetch
 
 
 def main():

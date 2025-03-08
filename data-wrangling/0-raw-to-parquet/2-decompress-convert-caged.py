@@ -4,7 +4,7 @@ from pathlib import Path
 
 import polars as pl
 
-from pdet_fetcher import reader
+from pdet_data import reader
 
 DIR = Path(__file__).parent.absolute()
 
