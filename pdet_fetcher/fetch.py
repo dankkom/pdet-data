@@ -32,7 +32,7 @@ def connect() -> ftplib.FTP:
 def list_files(ftp: ftplib.FTP, directory: str) -> list[dict]:
     """List all files in the current directory."""
 
-    logger.info(f"Listing %s", directory)
+    logger.info("Listing %s", directory)
 
     ftp_lines = []
     ftp.cwd(directory)
@@ -90,7 +90,7 @@ def fetch_file(ftp: ftplib.FTP, ftp_filepath: str, dest_filepath: Path, **kwargs
     else:
         file_size = ftp.size(ftp_filepath)
 
-    logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+    logger.info("Fetching %s --> %s", ftp_filepath, dest_filepath)
 
     progress = tqdm(
         desc=dest_filepath.name,
@@ -205,10 +205,10 @@ def fetch_caged(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
-            logger.info(ftp_filepath, "already fetched")
+            logger.info("%s already fetched", ftp_filepath)
             continue
         file_size = file["size"]
-        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        logger.info("Fetching %s --> %s", ftp_filepath, dest_filepath)
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
         metadata = file | {"filepath": dest_filepath}
         metadata_list.append(metadata)
@@ -221,10 +221,10 @@ def fetch_caged_docs(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_docs_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
-            logger.info(ftp_filepath, "already fetched")
+            logger.info("%s already fetched", ftp_filepath)
             continue
         file_size = file["size"]
-        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        logger.info("Fetching %s --> %s", ftp_filepath, dest_filepath)
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
         metadata = file | {"filepath": dest_filepath}
         metadata_list.append(metadata)
@@ -325,10 +325,10 @@ def fetch_caged_2020(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_2020_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
-            logger.info(ftp_filepath, "already fetched")
+            logger.info("%s already fetched", ftp_filepath)
             continue
         file_size = file["size"]
-        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        logger.info("Fetching %s --> %s", ftp_filepath, dest_filepath)
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
         metadata = file | {"filepath": dest_filepath}
         metadata_list.append(metadata)
@@ -341,10 +341,10 @@ def fetch_caged_2020_docs(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any
         ftp_filepath = file["full_path"]
         dest_filepath = get_caged_2020_docs_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
-            logger.info(ftp_filepath, "already fetched")
+            logger.info("%s already fetched", ftp_filepath)
             continue
         file_size = file["size"]
-        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        logger.info("Fetching %s --> %s", ftp_filepath, dest_filepath)
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
         metadata = file | {"filepath": dest_filepath}
         metadata_list.append(metadata)
@@ -372,10 +372,10 @@ def fetch_rais(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
         ftp_filepath = file["full_path"]
         dest_filepath = get_rais_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
-            logger.info(ftp_filepath, "already fetched")
+            logger.info("%s already fetched", ftp_filepath)
             continue
         file_size = file["size"]
-        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        logger.info("Fetching %s --> %s", ftp_filepath, dest_filepath)
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
         metadata = file | {"filepath": dest_filepath}
         metadata_list.append(metadata)
@@ -388,10 +388,10 @@ def fetch_rais_docs(ftp: ftplib.FTP, dest_dir: Path) -> list[dict[str, Any]]:
         ftp_filepath = file["full_path"]
         dest_filepath = get_rais_docs_filepath(file, dest_dir)
         if dest_filepath.exists() and dest_filepath.stat().st_size == file["size"]:
-            logger.info(ftp_filepath, "already fetched")
+            logger.info("%s already fetched", ftp_filepath)
             continue
         file_size = file["size"]
-        logger.info(f"Fetching {ftp_filepath} --> {dest_filepath}")
+        logger.info("Fetching %s --> %s", ftp_filepath, dest_filepath)
         fetch_file(ftp, ftp_filepath, dest_filepath, file_size=file_size)
         metadata = file | {"filepath": dest_filepath}
         metadata_list.append(metadata)
