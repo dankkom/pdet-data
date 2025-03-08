@@ -1,7 +1,7 @@
 [project]
-name = "pdet-fetcher"
+name = "pdet-data"
 version = "0.1.1"
-description = "pdet-fetcher: Collect microdata from PDET"
+description = "pdet-data: Collect microdata from PDET"
 authors = [
     {name="Daniel Komesu", email="danielkomesu@gmail.com"},
 ]
