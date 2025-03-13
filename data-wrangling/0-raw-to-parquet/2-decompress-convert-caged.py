@@ -40,8 +40,8 @@ def main():
         name = file_metadata["name"]
         dataset = file_metadata["dataset"]
         dest_filepath = dest_dir / str(date)[:4] / f"{name}.parquet"
-        # if dest_filepath.exists():
-        #     continue
+        if dest_filepath.exists():
+            continue
         decompressed = reader.decompress(file_metadata)
         decompressed_filepath = decompressed["decompressed_filepath"]
         convert_caged(decompressed_filepath, dataset, dest_filepath, date)
