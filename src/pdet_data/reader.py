@@ -66,7 +66,7 @@ def convert_columns_dtypes(df: pl.DataFrame) -> pl.DataFrame:
     return df
 
 
-def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args) -> pl.DataFrame:
+def get_rais_columns(year: int, dataset: str) -> list[str]:
     if dataset == "vinculos":
         for y in RAIS_VINCULOS_COLUMNS:
             if year < y:
@@ -77,56 +77,10 @@ def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args) -> pl.Da
             if year < y:
                 break
             columns_names = RAIS_ESTABELECIMENTOS_COLUMNS[y]
-    print("Reading", dataset, filepath)
-    df = pl.read_csv(
-        filepath,
-        has_header=True,
-        new_columns=columns_names,
-        separator=";",
-        encoding="latin1",
-        null_values=NA_VALUES,
-        infer_schema_length=0,
-        **read_csv_args,
-    )
-    df = convert_columns_dtypes(df)
-    return df
+    return columns_names
 
 
-def read_rais_batched(
-    filepath: Path, year: int, dataset: str, **read_csv_args
-) -> Generator[pl.DataFrame, None, None]:
-    if dataset == "vinculos":
-        for y in RAIS_VINCULOS_COLUMNS:
-            if year < y:
-                break
-            columns_names = RAIS_VINCULOS_COLUMNS[y]
-    elif dataset == "estabelecimentos":
-        for y in RAIS_ESTABELECIMENTOS_COLUMNS:
-            if year < y:
-                break
-            columns_names = RAIS_ESTABELECIMENTOS_COLUMNS[y]
-
-    print("Reading", dataset, filepath)
-    df = pl.read_csv_batched(
-        filepath,
-        has_header=True,
-        new_columns=columns_names,
-        separator=";",
-        encoding="latin1",
-        null_values=NA_VALUES,
-        infer_schema_length=0,
-        batch_size=100_000,
-        **read_csv_args,
-    )
-    for chunk in df:
-        # Convert columns dtypes for each chunk
-        chunk = convert_columns_dtypes(chunk)
-        yield chunk
-
-
-def read_caged(
-    filepath: Path, date: int, dataset: str, **read_csv_args
-) -> pl.DataFrame:
+def get_caged_columns(date: int, dataset: str) -> tuple[list[str], str]:
     if dataset == "caged":
         encoding = "latin-1"
         for d in CAGED_COLUMNS:
@@ -157,6 +111,53 @@ def read_caged(
             if date < d:
                 break
             columns_names = CAGED_2020_MOV_COLUMNS[d]
+    return columns_names, encoding
+
+
+def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args) -> pl.DataFrame:
+    columns_names = get_rais_columns(year, dataset)
+    print("Reading", dataset, filepath)
+    df = pl.read_csv(
+        filepath,
+        has_header=True,
+        new_columns=columns_names,
+        separator=";",
+        encoding="latin-1",
+        null_values=NA_VALUES,
+        infer_schema_length=0,
+        **read_csv_args,
+    )
+    df = convert_columns_dtypes(df)
+    return df
+
+
+def read_rais_batched(
+    filepath: Path, year: int, dataset: str, **read_csv_args
+) -> Generator[pl.DataFrame, None, None]:
+    columns_names = get_rais_columns(year, dataset)
+
+    print("Reading", dataset, filepath)
+    df = pl.read_csv_batched(
+        filepath,
+        has_header=True,
+        new_columns=columns_names,
+        separator=";",
+        encoding="latin-1",
+        null_values=NA_VALUES,
+        infer_schema_length=0,
+        batch_size=100_000,
+        **read_csv_args,
+    )
+    for chunk in df:
+        # Convert columns dtypes for each chunk
+        chunk = convert_columns_dtypes(chunk)
+        yield chunk
+
+
+def read_caged(
+    filepath: Path, date: int, dataset: str, **read_csv_args
+) -> pl.DataFrame:
+    columns_names, encoding = get_caged_columns(date, dataset)
 
     print("Reading", dataset, filepath)
     df = pl.read_csv(
@@ -176,36 +177,7 @@ def read_caged(
 def read_caged_batched(
     filepath: Path, date: int, dataset: str, **read_csv_args
 ) -> Generator[pl.DataFrame, None, None]:
-    if dataset == "caged":
-        encoding = "latin-1"
-        for d in CAGED_COLUMNS:
-            if date < d:
-                break
-            columns_names = CAGED_COLUMNS[d]
-    elif dataset == "caged-ajustes":
-        encoding = "latin-1"
-        for d in CAGED_AJUSTES_COLUMNS:
-            if date < d:
-                break
-            columns_names = CAGED_AJUSTES_COLUMNS[d]
-    elif dataset == "caged-2020-exc":
-        encoding = "utf-8"
-        for d in CAGED_2020_EXC_COLUMNS:
-            if date < d:
-                break
-            columns_names = CAGED_2020_EXC_COLUMNS[d]
-    elif dataset == "caged-2020-for":
-        encoding = "utf-8"
-        for d in CAGED_2020_FOR_COLUMNS:
-            if date < d:
-                break
-            columns_names = CAGED_2020_FOR_COLUMNS[d]
-    elif dataset == "caged-2020-mov":
-        encoding = "utf-8"
-        for d in CAGED_2020_MOV_COLUMNS:
-            if date < d:
-                break
-            columns_names = CAGED_2020_MOV_COLUMNS[d]
+    columns_names, encoding = get_caged_columns(date, dataset)
 
     print("Reading", dataset, filepath)
     df = pl.read_csv_batched(
