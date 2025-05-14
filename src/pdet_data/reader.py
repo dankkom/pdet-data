@@ -148,10 +148,13 @@ def read_rais_batched(
         batch_size=100_000,
         **read_csv_args,
     )
-    for chunk in df:
-        # Convert columns dtypes for each chunk
-        chunk = convert_columns_dtypes(chunk)
-        yield chunk
+    batches = iter(lambda: df.next_batches(10), None)
+    for batch in batches:
+        for chunk in batch:
+            print("Processing chunk")
+            # Convert columns dtypes for each chunk
+            chunk = convert_columns_dtypes(chunk)
+            yield chunk
 
 
 def read_caged(
@@ -191,10 +194,13 @@ def read_caged_batched(
         batch_size=100_000,
         **read_csv_args,
     )
-    for chunk in df:
-        # Convert columns dtypes for each chunk
-        chunk = convert_columns_dtypes(chunk)
-        yield chunk
+    batches = iter(lambda: df.next_batches(10), None)
+    for batch in batches:
+        for chunk in batch:
+            print("Processing chunk")
+            # Convert columns dtypes for each chunk
+            chunk = convert_columns_dtypes(chunk)
+            yield chunk
 
 
 def write_parquet(df: pl.DataFrame, filepath: Path) -> Path:
