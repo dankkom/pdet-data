@@ -35,19 +35,39 @@ def main():
     data_dir = args.data_dir
     dest_dir = args.dest_dir
 
-    for file in data_dir.glob("**/rais-*.*"):
+    # rais-vinculos
+    dataset = "vinculos"
+    data_dir_rais_vinculos = data_dir / "rais-vinculos"
+    dest_dir_rais_vinculos = dest_dir / "rais-vinculos"
+    for file in data_dir_rais_vinculos.glob("**/rais-*.*"):
         file_metadata = reader.parse_filename(file)
         date = file_metadata["date"]
         name = file_metadata["name"]
-        dataset = "vinculos" if "vinculos" in name else "estabelecimentos"
-        dest_filepath = dest_dir / str(date) / f"{name}.parquet"
+        dest_filepath = dest_dir_rais_vinculos / str(date) / f"{name}.parquet"
         if dest_filepath.exists():
             continue
         decompressed = reader.decompress(file_metadata)
         decompressed_filepath = decompressed["decompressed_filepath"]
         convert_rais(decompressed_filepath, dataset, dest_filepath, date)
         shutil.rmtree(decompressed["tmp_dir"])
-        print(f"Done {file}")
+
+    # rais-estabelecimentos
+    dataset = "estabelecimentos"
+    data_dir_rais_estabelecimentos = data_dir / "rais-estabelecimentos"
+    dest_dir_rais_estabelecimentos = dest_dir / "rais-estabelecimentos"
+    for file in data_dir_rais_estabelecimentos.glob("**/rais-*.*"):
+        file_metadata = reader.parse_filename(file)
+        date = file_metadata["date"]
+        name = file_metadata["name"]
+        dest_filepath = dest_dir_rais_estabelecimentos / str(date) / f"{name}.parquet"
+        if dest_filepath.exists():
+            continue
+        decompressed = reader.decompress(file_metadata)
+        decompressed_filepath = decompressed["decompressed_filepath"]
+        convert_rais(decompressed_filepath, dataset, dest_filepath, date)
+        shutil.rmtree(decompressed["tmp_dir"])
+
+    print("Done converting RAIS files.")
 
 
 if __name__ == "__main__":
