@@ -34,12 +34,14 @@ def main():
     dest_dir = args.dest_dir
 
     for file in data_dir.glob("**/caged*.*"):
+        if file.suffix not in (".zip", ".7z"):
+            continue
         print(file)
         file_metadata = reader.parse_filename(file)
         date = file_metadata["date"]
         name = file_metadata["name"]
         dataset = file_metadata["dataset"]
-        dest_filepath = dest_dir / str(date)[:4] / f"{name}.parquet"
+        dest_filepath = dest_dir / dataset / str(date)[:4] / f"{name}.parquet"
         if dest_filepath.exists():
             continue
         decompressed = reader.decompress(file_metadata)
