@@ -330,7 +330,7 @@ RAIS_VINCULOS_COLUMNS = {
         "tamanho_estabelecimento",
         "tempo_emprego",
         "tipo_admissao",
-        "tipo_estabelecimento	",
+        "tipo_estabelecimento",
         "tipo_estabelecimento_desc",
         "tipo_vinculo",
     ),
