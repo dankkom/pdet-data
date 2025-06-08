@@ -9,7 +9,19 @@ from pdet_data import reader
 DIR = Path(__file__).parent.absolute()
 
 
-def convert_caged(decompressed_filepath, dataset, dest_filepath, date):
+def convert_caged(filepath: Path, dest_dir: Path):
+    file_metadata = reader.parse_filename(filepath)
+    date = file_metadata["date"]
+    name = file_metadata["name"]
+    dataset = file_metadata["dataset"]
+
+    dest_filepath = dest_dir / dataset / f"{name}.parquet"
+    if dest_filepath.exists():
+        continue
+
+    decompressed = reader.decompress(file_metadata)
+    decompressed_filepath = decompressed["decompressed_filepath"]
+
     try:
         df = reader.read_caged(
             decompressed_filepath,
@@ -21,6 +33,10 @@ def convert_caged(decompressed_filepath, dataset, dest_filepath, date):
         print(f"Error converting {decompressed_filepath}: {e}")
     except pl.exceptions.ShapeError as e:
         print(f"Error converting {decompressed_filepath}: {e}")
+    finally:
+        shutil.rmtree(decompressed["tmp_dir"])
+
+    print(f"Done {filepath}")
 
 
 def main():
@@ -37,18 +53,7 @@ def main():
         if file.suffix not in (".zip", ".7z"):
             continue
         print(file)
-        file_metadata = reader.parse_filename(file)
-        date = file_metadata["date"]
-        name = file_metadata["name"]
-        dataset = file_metadata["dataset"]
-        dest_filepath = dest_dir / dataset / str(date)[:4] / f"{name}.parquet"
-        if dest_filepath.exists():
-            continue
-        decompressed = reader.decompress(file_metadata)
-        decompressed_filepath = decompressed["decompressed_filepath"]
-        convert_caged(decompressed_filepath, dataset, dest_filepath, date)
-        shutil.rmtree(decompressed["tmp_dir"])
-        print(f"Done {file}")
+        convert_caged(file, dest_dir)
 
 
 if __name__ == "__main__":
