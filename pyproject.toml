@@ -2,6 +2,7 @@
 name = "pdet-data"
 version = "0.1.1"
 description = "pdet-data: Collect microdata from PDET"
+readme = "README.md"
 authors = [
     {name="Daniel Komesu", email="danielkomesu@gmail.com"},
 ]
