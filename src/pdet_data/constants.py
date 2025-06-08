@@ -1406,3 +1406,7 @@ NA_VALUES = (
     " n/d",
     "n/d",
 )
+
+RAGGED_CSV_FILES = (
+    "CAGED_062012.txt",
+)

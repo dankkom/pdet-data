@@ -16,6 +16,7 @@ from .constants import (
     INTEGER_COLUMNS,
     NA_VALUES,
     NUMERIC_COLUMNS,
+    RAGGED_CSV_FILES,
     RAIS_ESTABELECIMENTOS_COLUMNS,
     RAIS_VINCULOS_COLUMNS,
 )
@@ -64,6 +65,25 @@ def convert_columns_dtypes(df: pl.DataFrame) -> pl.DataFrame:
         else:  # Categorical
             df = df.with_columns(pl.col(column).str.strip_chars())
     return df
+
+
+def _fix_ragged_csv(filepath: Path, encoding: str) -> Path:
+    import csv
+
+    print("Fixing ragged CSV file:", filepath)
+
+    dest_filepath = filepath.with_suffix(".fixed.csv")
+    with open(filepath, "r", encoding=encoding) as f:
+        reader = csv.reader(f, delimiter=";")
+        header = next(reader)
+        header_len = len(header)
+        with open(dest_filepath, "w", encoding=encoding, newline="\n") as ff:
+            writer = csv.writer(ff, delimiter=";", quotechar='"', quoting=csv.QUOTE_ALL)
+            writer.writerow(header)
+            for row in reader:
+                writer.writerow(row[:header_len])
+
+    return dest_filepath
 
 
 def read_rais(filepath: Path, year: int, dataset: str, **read_csv_args) -> pl.DataFrame:
@@ -127,6 +147,8 @@ def read_caged(
             columns_names = CAGED_2020_MOV_COLUMNS[d]
 
     print("Reading", dataset, filepath)
+    if filepath.name in RAGGED_CSV_FILES:
+        filepath = _fix_ragged_csv(filepath, encoding)
     df = pl.read_csv(
         filepath,
         has_header=True,
