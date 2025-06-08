@@ -17,7 +17,7 @@ def convert_caged(filepath: Path, dest_dir: Path):
 
     dest_filepath = dest_dir / dataset / f"{name}.parquet"
     if dest_filepath.exists():
-        continue
+        return
 
     decompressed = reader.decompress(file_metadata)
     decompressed_filepath = decompressed["decompressed_filepath"]
